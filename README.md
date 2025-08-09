@@ -1,27 +1,39 @@
-# Telegram Bot
+# Zima Blue - Telegram Link Collection Bot
 
-A simple and functional Telegram bot built with Python using the python-telegram-bot library. This bot provides basic command handling and message responses, serving as a foundation for more complex Telegram bot applications.
+A sophisticated Telegram bot designed for collecting and organizing links across multiple categories. Built with Python using the python-telegram-bot library, this bot provides an elegant solution for managing shared resources in group chats.
 
 ## Features
 
-- **Command Handling**: Responds to `/start`, `/help`, and `/list` commands
-- **Message Processing**: Handles text messages and provides appropriate responses
-- **Environment Configuration**: Uses `.env` files for secure token management
-- **Error Handling**: Includes comprehensive error handling and logging
-- **Extensible Structure**: Clean architecture for easy feature additions
+- **Multi-Category Link Management**: Organize links into predefined categories
+- **Smart Link Detection**: Automatically detects and categorizes URLs
+- **Duplicate Prevention**: Prevents duplicate links within categories
+- **Rich Formatting**: Beautiful HTML-formatted responses with clickable links
+- **Group Chat Optimized**: Designed specifically for group chat environments
+- **Webhook Support**: Production-ready with webhook deployment
+- **Environment Configuration**: Secure token management with .env files
+
+## Categories Supported
+
+- **Movies** - `/movies` - Movie streaming and download links
+- **Games** - `/games` - Game downloads and resources
+- **Apps** - `/apps` - Software applications and tools
+- **Videos** - `/videos` - Video content links
+- **Websites** - `/websites` - Useful websites and resources
+- **Uncategorized** - `/uncategorized` - Links without specific category
 
 ## Prerequisites
 
 - Python 3.7 or higher
 - A Telegram Bot Token (obtain from [@BotFather](https://t.me/BotFather))
+- A webhook URL (for production deployment)
 
 ## Installation
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/telegram_bot.git
-cd telegram_bot
+git clone https://github.com/yourusername/zima-blue-telegram-bot.git
+cd zima-blue-telegram-bot
 ```
 
 ### 2. Set Up Virtual Environment
@@ -43,12 +55,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**Note**: The `requirements.txt` includes `python-dotenv`. You'll also need to install the main telegram bot library:
-
-```bash
-pip install python-telegram-bot
-```
-
 ### 4. Configure Environment Variables
 
 1. Copy the example environment file:
@@ -56,40 +62,72 @@ pip install python-telegram-bot
 cp .env.example .env
 ```
 
-2. Edit `.env` and add your Telegram bot token:
+2. Edit `.env` and add your configuration:
 ```bash
 TELEGRAM_BOT_TOKEN=your-actual-bot-token-here
+WEBHOOK_URL=https://your-app-name.onrender.com
+PORT=8080
 ```
 
 ## Usage
 
 ### Running the Bot
 
+#### Development (Polling Mode)
+For development, you can modify the code to use polling instead of webhooks:
+
+```python
+# Replace the webhook section with:
+# app.run_polling()
+```
+
+#### Production (Webhook Mode)
 ```bash
 python main.py
 ```
 
-The bot will start and begin polling for messages. You'll see output indicating the bot is running.
+### Bot Commands
 
-### Available Commands
-
+#### User Commands
 - `/start` - Welcome message and bot introduction
-- `/help` - Display available commands and usage instructions
-- `/list` - Show a list of items (customizable)
+- `/help` - Display all available commands and usage instructions
+- `/listlinks` - Show all collected links organized by category
 
-### Testing the Bot
+#### Category Commands
+- `/movies` - Display all movie links
+- `/games` - Display all game links
+- `/apps` - Display all app links
+- `/videos` - Display all video links
+- `/websites` - Display all website links
+- `/uncategorized` - Display uncategorized links
 
-1. Start a chat with your bot on Telegram
-2. Send `/start` to see the welcome message
-3. Try `/help` for command information
-4. Send any text message to see the echo response
+### Adding Links
+
+In group chats, add links using the format:
+```
+/category: https://example.com/link
+```
+
+Examples:
+```
+/movies: https://netflix.com/movie123
+/games: https://store.steampowered.com/app/12345
+/apps: https://apps.apple.com/app/id123456
+```
+
+The bot will:
+1. Detect the category from the command
+2. Extract all URLs from the message
+3. Add unique links to the category
+4. Delete the original message to keep chat clean
+5. Notify if links already exist in the category
 
 ## Project Structure
 
 ```
-telegram_bot/
-├── main.py              # Main bot application
-├── requirements.txt     # Python dependencies
+zima-blue-telegram-bot/
+├── main.py              # Main bot application with all handlers
+├── requirements.txt     # Python dependencies (telegram-bot + webhooks)
 ├── .env.example        # Environment variables template
 ├── .env                # Your environment variables (create from .env.example)
 ├── .venv/              # Virtual environment (auto-generated)
@@ -100,99 +138,160 @@ telegram_bot/
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `TELEGRAM_BOT_TOKEN` | Your bot token from @BotFather | Yes |
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `TELEGRAM_BOT_TOKEN` | Your bot token from @BotFather | Yes | - |
+| `WEBHOOK_URL` | Your webhook URL for production | Yes | - |
+| `PORT` | Port for webhook server | No | 8080 |
 
 ### Customization
 
-To add new commands:
-
-1. Add a new handler function in `main.py`:
+#### Adding New Categories
+1. Add the category to the `CATEGORIES` set in `main.py`:
 ```python
-async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Your response here")
+CATEGORIES = {"movies", "games", "apps", "videos", "websites", "uncategorized", "newcategory"}
 ```
 
-2. Register the handler in the main function:
+2. The bot will automatically handle the new category with `/newcategory` command
+
+#### Modifying Link Detection
+The regex pattern for link detection can be adjusted in the `link_collector` function:
 ```python
-app.add_handler(CommandHandler("newcommand", new_command))
+links = re.findall(r'https?://[^\s)]+', links_text)
 ```
 
 ## Development
 
-### Adding New Features
+### Architecture Overview
 
-The bot uses the python-telegram-bot library v20+ with asyncio. Key components:
+- **Application**: Main bot instance with webhook configuration
+- **Command Handlers**: Process slash commands
+- **Message Handler**: Processes category-based link submissions
+- **Regex Patterns**: Flexible command matching with username support
+- **In-Memory Storage**: Links stored per chat ID (resets on restart)
 
-- **Application**: Main bot instance
-- **CommandHandler**: Handles slash commands
-- **MessageHandler**: Processes text messages
-- **Filters**: Controls which messages to process
+### Key Components
+
+1. **Link Collection System**:
+   - Regex-based category detection
+   - URL extraction and validation
+   - Duplicate prevention
+   - Automatic message cleanup
+
+2. **Response Formatting**:
+   - HTML-formatted messages
+   - Numbered lists with clickable links
+   - Web preview disabled for cleaner appearance
+
+3. **Group Chat Optimization**:
+   - Commands work with or without bot username
+   - Case-insensitive command matching
+   - Per-chat data isolation
 
 ### Error Handling
 
-The bot includes comprehensive error handling:
-- Missing token validation
-- Network error recovery
-- User-friendly error messages
-
-### Logging
-
-Logs are output to the console for debugging purposes. You can modify the logging level in `main.py` if needed.
+- Missing environment variable validation
+- Invalid category handling
+- Malformed URL detection
+- Graceful error responses
 
 ## Deployment
 
-### Local Development
+### Render Deployment (Recommended)
 
-For local development, simply run:
-```bash
-python main.py
+1. **Create Web Service**:
+   - Connect your GitHub repository
+   - Set runtime to Python
+   - Use `python main.py` as start command
+
+2. **Environment Variables**:
+   - Add `TELEGRAM_BOT_TOKEN`
+   - Add `WEBHOOK_URL` (your Render app URL)
+   - Add `PORT` (Render will provide this)
+
+3. **Set Webhook**:
+   ```bash
+   curl -F "url=https://your-app.onrender.com/YOUR_BOT_TOKEN" \
+        https://api.telegram.org/botYOUR_BOT_TOKEN/setWebhook
+   ```
+
+### Heroku Deployment
+
+1. Create `Procfile`:
+```
+web: python main.py
 ```
 
-### Production Deployment
+2. Deploy with Heroku CLI:
+```bash
+heroku create your-bot-name
+heroku config:set TELEGRAM_BOT_TOKEN=your-token
+heroku config:set WEBHOOK_URL=https://your-bot-name.herokuapp.com
+git push heroku main
+```
 
-For production deployment, consider:
+### VPS/Cloud Deployment
 
-1. **Using a process manager** like systemd, PM2, or supervisor
-2. **Setting up webhooks** instead of polling for better performance
-3. **Using environment variables** for configuration
-4. **Setting up logging** to files instead of console
-
-Example systemd service:
+1. **Using systemd** (Ubuntu/Debian):
 ```ini
 [Unit]
-Description=Telegram Bot
+Description=Zima Blue Telegram Bot
 After=network.target
 
 [Service]
 Type=simple
 User=botuser
-WorkingDirectory=/path/to/telegram_bot
+WorkingDirectory=/path/to/zima-blue-telegram-bot
 Environment="TELEGRAM_BOT_TOKEN=your-token"
-ExecStart=/path/to/telegram_bot/.venv/bin/python main.py
+Environment="WEBHOOK_URL=https://your-domain.com"
+Environment="PORT=8080"
+ExecStart=/path/to/zima-blue-telegram-bot/.venv/bin/python main.py
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
+2. **Using Docker**:
+```dockerfile
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "main.py"]
+```
+
 ## Troubleshooting
 
 ### Common Issues
 
-1. **"TELEGRAM_BOT_TOKEN environment variable not set"**
-   - Ensure your `.env` file exists and contains the token
-   - Verify the token is correct
+1. **"TELEGRAM_BOT_TOKEN and WEBHOOK_URL must be set"**
+   - Ensure both environment variables are properly set
+   - Check `.env` file exists and is loaded
 
-2. **Import errors**
-   - Ensure virtual environment is activated
-   - Run `pip install -r requirements.txt` again
+2. **Bot not responding in groups**
+   - Ensure bot has admin permissions or can read messages
+   - Check if privacy mode is disabled for group chats
+   - Verify webhook is properly set
 
-3. **Bot not responding**
-   - Check if the bot is started
-   - Verify the bot token is valid
-   - Check if the bot has permission to read messages
+3. **Links not being collected**
+   - Ensure correct format: `/category: https://link.com`
+   - Check if links are already in the category
+   - Verify bot has permission to delete messages
+
+4. **Webhook issues**
+   - Ensure webhook URL is publicly accessible
+   - Check if URL ends with `/YOUR_BOT_TOKEN`
+   - Verify SSL certificate (required for webhooks)
+
+### Debug Mode
+
+Enable debug logging by adding to `main.py`:
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+```
 
 ### Getting Help
 
@@ -208,6 +307,13 @@ WantedBy=multi-user.target
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+### Development Guidelines
+
+- Follow PEP 8 style guidelines
+- Add appropriate error handling
+- Test in group chat environments
+- Update documentation for new features
+
 ## License
 
 This project is open source and available under the [MIT License](LICENSE).
@@ -216,3 +322,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 - [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot) for the excellent Python wrapper
 - Telegram for providing the Bot API
+- The Zima Blue concept for inspiration in elegant simplicity
