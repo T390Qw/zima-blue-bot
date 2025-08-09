@@ -1,10 +1,11 @@
-import re
 import os
+import re
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 from dotenv import load_dotenv
 
-from collections import defaultdict
+# Load environment variables
+load_dotenv()
 
 # Predefined categories
 CATEGORIES = {"movies", "games", "apps", "videos", "websites", "uncategorized"}
@@ -33,16 +34,14 @@ async def link_collector(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message and update.message.text:
         text = update.message.text.strip()
         chat_id = update.effective_chat.id
-        # Ensure chat entry exists
         if chat_id not in links_by_chat:
             links_by_chat[chat_id] = {cat: [] for cat in CATEGORIES}
-        # Check for batch category command: /category: <links> or /category <links>
+
         match = re.match(r"/(\w+):?\s*([\s\S]+)", text, re.DOTALL)
         if match:
             category = match.group(1).lower()
             if category in CATEGORIES:
                 links_text = match.group(2)
-                # Find all links, even if surrounded by text or on new lines
                 links = re.findall(r'https?://[^\s)]+', links_text)
                 filtered_links = [
                     link for link in links
@@ -59,11 +58,8 @@ async def link_collector(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 elif already_present:
                     await update.message.reply_text("Link already present in this category.")
                     return
-        # Do not collect uncategorized links; ignore plain links
-        # If not a link or category command, do nothing so unknown_command can handle it
 
 async def category_links(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Extract the command (category) from the message, strip @botname if present
     command = update.message.text.strip().lower().lstrip("/")
     command = command.split("@", 1)[0]
     chat_id = update.effective_chat.id
@@ -103,27 +99,30 @@ async def list_links(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("No links collected yet.")
 
-if __name__ == '__main__':
-    # Load environment variables from .env file if present
-    load_dotenv()
+if __name__ == "__main__":
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    if not token:
-        raise RuntimeError("TELEGRAM_BOT_TOKEN environment variable not set. Please set it in a .env file or as an environment variable.")
+    webhook_url = os.environ.get("WEBHOOK_URL")  # This will be your Render URL
+
+    if not token or not webhook_url:
+        raise RuntimeError("TELEGRAM_BOT_TOKEN and WEBHOOK_URL must be set as environment variables.")
+
     app = ApplicationBuilder().token(token).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("listlinks", list_links))
 
-    # Add a command for each category to get only that category's links, but only if the message is a pure command (no extra text)
-    from telegram.ext import filters as tg_filters
     for cat in CATEGORIES:
         if cat != "uncategorized":
-            # Accept /cat, /cat@bot, case-insensitive
             pattern = rf"(?i)^/{cat}(?:@\w+)?$"
-            app.add_handler(CommandHandler(cat, category_links, filters=tg_filters.Regex(pattern)))
+            app.add_handler(CommandHandler(cat, category_links, filters.Regex(pattern)))
 
-    # link_collector should handle /Movies (with or without colon) followed by links, i.e., not a pure command
     app.add_handler(MessageHandler(filters.TEXT & filters.ChatType.GROUPS, link_collector))
 
-    app.run_polling()
+    # Run webhook instead of polling
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 8080)),
+        url_path=token,
+        webhook_url=f"{webhook_url}/{token}"
+    )
