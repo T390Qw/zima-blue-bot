@@ -1,0 +1,36 @@
+/Movies:
+https://4khdhub.fans/ - 4K with Zips 
+https://bollyflix.pub/ - 4k movies without zips
+https://cinemalux.icu/ - 4K
+https://yflix.to/home - only online watch 
+https://dramadrip.com/language/hindi/ - kdrama hd
+https://hdhub4u.gifts/ - HD plus with zips
+https://hdmovie2.systems/ - HD online with download 
+https://www.rtally.xyz/home - 1080p with zips
+https://www.cineby.app/
+https://yarrlist.com/
+https://fmhy.net/videopiracyguide#streaming-sites
+https://www.nullflix.zone.id/
+
+/Apps:
+https://github.com/Kin69/Athena
+https://github.com/Xposed-Modules-Repo/com.wizpizz.reddidnt/releases
+https://github.com/ksh-b/raven/releases
+https://github.com/bepass-org/oblivion-desktop
+https://github.com/bepass-org/oblivion/releases/tag/v7
+https://github.com/matan-h/Transfer
+https://github.com/NoWakeLock/NoWakeLock
+https://play.google.com/store/apps/details?id=com.itdeveapps.habitrix.tracker
+https://play.google.com/store/apps/details?id=com.shpak.arrow
+https://github.com/simple-login/Simple-Login-Android
+https://github.com/anasty17/mirror-leech-telegram-bot
+https://github.com/Helium314/HeliBoard/releases/tag/v3.2
+https://github.com/deniscerri/ytdlnis
+https://github.com/michaldrabik/showly
+https://www.quetta.net/
+
+/Games:
+https://fitgirl-repacks.site/popular-repacks/
+https://dodi-repacks.site/
+
+set TELEGRAM_BOT_TOKEN=8251017653:AAHqlyoesBFNbWF4UcUbW24fX_WFpvWYkP8
